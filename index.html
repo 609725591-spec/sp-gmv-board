@@ -104,7 +104,7 @@
 
   <div class="kpis">
     <div class="kpi red"><div class="lab">今日支付GMV（元）</div><div class="val" id="kToday">—</div><div class="sub" id="kTodaySub">&nbsp;</div></div>
-    <div class="kpi"><div class="lab">活动期核销GMV合计（元）</div><div class="val" id="kPeriod">—</div><div class="sub" id="kPeriodSub">&nbsp;</div></div>
+    <div class="kpi"><div class="lab">今日核销GMV（元）</div><div class="val" id="kPeriod">—</div><div class="sub" id="kPeriodSub">&nbsp;</div></div>
     <div class="kpi"><div class="lab">今日交易门店数</div><div class="val" id="kShops">—</div><div class="sub" id="kShopsSub">&nbsp;</div></div>
   </div>
 
@@ -181,21 +181,18 @@ function render(){
   const sum = arr => arr.reduce((s,r)=>s+(Number(r.pay_amt)||0),0);
   const sumV = arr => arr.reduce((s,r)=>s+(Number(r.verify_amt)||0),0);
   const today = sum(LATEST);
-  const prevSum = prev ? sum(ROWS.filter(r=>r.stat_date===prev)) : null;
-  const period = sumV(ROWS);
+  const period = sumV(LATEST);
   const shops = new Set(LATEST.map(r=>r.shop_id)).size;
 
   $('pname').textContent = LATEST[0] ? (LATEST[0].provider_name) : '';
   $('mDate').textContent = latest;
   $('mTime').textContent = new Date().toLocaleString('zh-CN',{hour12:false});
   $('kToday').textContent = fmt(today);
+  $('kTodaySub').innerHTML = '&nbsp;';
   $('kPeriod').textContent = fmt(period);
-  $('kPeriodSub').textContent = '覆盖 ' + dates.length + ' 个数据日';
+  $('kPeriodSub').textContent = '当日核销汇总';
   $('kShops').textContent = fmt(shops);
   $('kShopsSub').textContent = '当日有交易门店';
-  if(prevSum!=null && prevSum>0){
-    $('kTodaySub').innerHTML = '较上一日 <span class="'+(today-prevSum>=0?'up':'down')+'">'+(today-prevSum>=0?'+':'')+fmt(today-prevSum)+'</span>';
-  } else { $('kTodaySub').innerHTML = '&nbsp;'; }
 
   $('tblDate').textContent = '（'+latest+'）';
   $('loading').style.display = 'none';
