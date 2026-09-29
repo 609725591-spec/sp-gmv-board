@@ -206,7 +206,7 @@ function render(){
 
 function drawTable(rows){
   const tb = $('tbody');
-  if(!rows.length){ $('tblWrap').style.display='none'; $('empty').style.display='block'; return; }
+  if(!rows.length){ tb.innerHTML=''; $('tblWrap').style.display='none'; $('empty').style.display='block'; return; }
   $('empty').style.display='none'; $('tblWrap').style.display='block';
   tb.innerHTML = rows.map(r=>'<tr>'
     + '<td>'+(r.shop_name||'')+'</td>'
