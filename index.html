@@ -188,7 +188,7 @@ function render(){
   $('mDate').textContent = latest;
   $('mTime').textContent = new Date().toLocaleString('zh-CN',{hour12:false});
   $('kToday').textContent = fmt(today);
-  $('kTodaySub').innerHTML = '&nbsp;';
+  $('kTodaySub').textContent = '当日支付汇总';
   $('kPeriod').textContent = fmt(period);
   $('kPeriodSub').textContent = '当日核销汇总';
   $('kShops').textContent = fmt(shops);
