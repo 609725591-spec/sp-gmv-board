@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>服务商经营看板 · 实时GMV</title>
+<title>服务商十一大促GMV看板</title>
 <style>
   :root{
     --bg:#FFF8F2; --card:#FFFFFF; --ink:#2B2118; --sub:#8A7A6A;
@@ -34,6 +34,9 @@
   .meta{text-align:right;font-size:12px;color:var(--sub);line-height:1.7}
   .meta b{color:var(--goldnum);font-weight:600}
   #logoutBtn{margin-left:10px;padding:6px 12px;font-size:12px;border:1px solid var(--line);background:#fff;border-radius:8px;color:var(--sub);cursor:pointer}
+
+  /* ---------- 顶部提示条 ---------- */
+  .notice{background:var(--red);color:#fff;font-size:14px;font-weight:700;text-align:center;padding:11px 14px;border-radius:12px;margin-bottom:14px;letter-spacing:.3px;line-height:1.5}
 
   /* ---------- 指标卡 ---------- */
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
@@ -73,8 +76,8 @@
 <div id="login">
   <div class="login-card">
     <div class="login-badge">商</div>
-    <h1>服务商经营看板</h1>
-    <p>请输入您的专属权限码查看本司实时经营数据</p>
+    <h1>服务商十一大促GMV看板</h1>
+    <p>请输入您的专属权限码查看本司大促GMV数据</p>
     <input id="codeInput" type="text" placeholder="权限码" autocomplete="off">
     <button id="loginBtn">进入看板</button>
     <div id="loginErr"></div>
@@ -83,11 +86,12 @@
 
 <!-- 看板 -->
 <div id="board" class="wrap" style="display:none">
+  <div class="notice">本次数据仅供大促期间进度参考，最终结算金额以轩辕战报为准</div>
   <header>
     <div class="brand">
       <div class="dot">商</div>
       <div>
-        <h1>服务商经营看板</h1>
+        <h1>服务商十一大促GMV看板</h1>
         <div class="pname" id="pname">—</div>
       </div>
     </div>
@@ -109,7 +113,7 @@
     <div class="panel-head">
       <h2>门店交易明细<span id="tblDate"></span></h2>
       <div class="tools">
-        <input id="search" type="text" placeholder="搜索门店/商户名…">
+        <input id="search" type="text" placeholder="搜索门店名/商户名/商户ID/门店ID…">
         <button id="exportBtn">导出CSV</button>
       </div>
     </div>
@@ -117,7 +121,7 @@
     <div class="tbl-scroll" id="tblWrap" style="display:none">
       <table>
         <thead><tr>
-          <th>区域</th><th>门店名称</th><th>shop_id</th><th>商户主体</th><th>品类</th><th>运维小二</th><th style="text-align:right">支付金额</th><th style="text-align:right">核销金额</th>
+          <th>门店名称</th><th>商户ID</th><th>门店ID</th><th>商户主体</th><th>品类</th><th>运维小二</th><th style="text-align:right">支付金额</th><th style="text-align:right">核销金额</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -205,8 +209,8 @@ function drawTable(rows){
   if(!rows.length){ $('tblWrap').style.display='none'; $('empty').style.display='block'; return; }
   $('empty').style.display='none'; $('tblWrap').style.display='block';
   tb.innerHTML = rows.map(r=>'<tr>'
-    + '<td>'+(r.region||'')+'</td>'
     + '<td>'+(r.shop_name||'')+'</td>'
+    + '<td>'+(r.partner_id||'')+'</td>'
     + '<td>'+(r.shop_id||'')+'</td>'
     + '<td>'+(r.partner_name||'')+'</td>'
     + '<td>'+(r.l2_srvline||'')+'</td>'
@@ -217,11 +221,11 @@ function drawTable(rows){
 }
 
 function exportCSV(){
-  const head = ['区域','门店名称','shop_id','商户主体','品类','运维二级部门','运维三级部门','运维四级部门','运维小二','支付金额','核销金额','数据日期'];
+  const head = ['门店名称','商户ID','门店ID','商户主体','品类','运维二级部门','运维三级部门','运维四级部门','运维小二','支付金额','核销金额','数据日期'];
   const lines = ['\uFEFF'+head.join(',')];
   LATEST.forEach(r=>{
     const esc = v => { v=(v==null?'':String(v)); return /[",\n]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; };
-    lines.push([r.region,r.shop_name,r.shop_id,r.partner_name,r.l2_srvline,r.ops_dept2,r.ops_dept3,r.ops_dept4,r.ops_staff,r.pay_amt,r.verify_amt,r.stat_date].map(esc).join(','));
+    lines.push([r.shop_name,r.partner_id,r.shop_id,r.partner_name,r.l2_srvline,r.ops_dept2,r.ops_dept3,r.ops_dept4,r.ops_staff,r.pay_amt,r.verify_amt,r.stat_date].map(esc).join(','));
   });
   const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
@@ -236,7 +240,7 @@ $('logoutBtn').onclick = ()=>{ localStorage.removeItem('sp_code'); location.relo
 $('exportBtn').onclick = exportCSV;
 $('search').oninput = e=>{
   const q = e.target.value.trim();
-  drawTable(q ? LATEST.filter(r=>(r.shop_name||'').includes(q)||(r.partner_name||'').includes(q)||(r.shop_id||'').includes(q)) : LATEST);
+  drawTable(q ? LATEST.filter(r=>(r.shop_name||'').includes(q)||(r.partner_name||'').includes(q)||(r.shop_id||'').includes(q)||(r.partner_id||'').includes(q)) : LATEST);
 };
 
 if(CODE){ login(CODE); }
