@@ -216,11 +216,11 @@ function drawTable(rows){
 }
 
 function exportCSV(){
-  const head = ['门店名称','支付金额','门店ID','商户ID','商户主体','品类','运维二级部门','运维三级部门','运维四级部门','运维小二','核销金额','数据日期'];
+  const head = ['门店名称','支付金额','门店ID','商户ID','商户主体','品类','核销金额','数据日期'];
   const lines = ['\uFEFF'+head.join(',')];
   LATEST.forEach(r=>{
     const esc = v => { v=(v==null?'':String(v)); return /[",\n]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; };
-    lines.push([r.shop_name,r.pay_amt,r.shop_id,r.partner_id,r.partner_name,r.l2_srvline,r.ops_dept2,r.ops_dept3,r.ops_dept4,r.ops_staff,r.verify_amt,r.stat_date].map(esc).join(','));
+    lines.push([r.shop_name,r.pay_amt,r.shop_id,r.partner_id,r.partner_name,r.l2_srvline,r.verify_amt,r.stat_date].map(esc).join(','));
   });
   const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
