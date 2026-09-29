@@ -39,7 +39,7 @@
   .notice{background:var(--red);color:#fff;font-size:14px;font-weight:700;text-align:center;padding:11px 14px;border-radius:12px;margin-bottom:14px;letter-spacing:.3px;line-height:1.5}
 
   /* ---------- 指标卡 ---------- */
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
   @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px;position:relative;overflow:hidden}
   .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gold)}
@@ -104,8 +104,7 @@
 
   <div class="kpis">
     <div class="kpi red"><div class="lab">今日支付GMV（元）</div><div class="val" id="kToday">—</div><div class="sub" id="kTodaySub">&nbsp;</div></div>
-    <div class="kpi"><div class="lab">日环比</div><div class="val" id="kDod">—</div><div class="sub">对比上一数据日</div></div>
-    <div class="kpi"><div class="lab">活动期累计GMV（元）</div><div class="val" id="kPeriod">—</div><div class="sub" id="kPeriodSub">&nbsp;</div></div>
+    <div class="kpi"><div class="lab">活动期核销GMV合计（元）</div><div class="val" id="kPeriod">—</div><div class="sub" id="kPeriodSub">&nbsp;</div></div>
     <div class="kpi"><div class="lab">今日交易门店数</div><div class="val" id="kShops">—</div><div class="sub" id="kShopsSub">&nbsp;</div></div>
   </div>
 
@@ -121,7 +120,7 @@
     <div class="tbl-scroll" id="tblWrap" style="display:none">
       <table>
         <thead><tr>
-          <th>门店名称</th><th>商户ID</th><th>门店ID</th><th>商户主体</th><th>品类</th><th>运维小二</th><th style="text-align:right">支付金额</th><th style="text-align:right">核销金额</th>
+          <th>门店名称</th><th>门店ID</th><th>商户ID</th><th>商户主体</th><th>品类</th><th>运维小二</th><th style="text-align:right">支付金额</th><th style="text-align:right">核销金额</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -180,9 +179,10 @@ function render(){
   LATEST = ROWS.filter(r=>r.stat_date===latest);
 
   const sum = arr => arr.reduce((s,r)=>s+(Number(r.pay_amt)||0),0);
+  const sumV = arr => arr.reduce((s,r)=>s+(Number(r.verify_amt)||0),0);
   const today = sum(LATEST);
   const prevSum = prev ? sum(ROWS.filter(r=>r.stat_date===prev)) : null;
-  const period = sum(ROWS);
+  const period = sumV(ROWS);
   const shops = new Set(LATEST.map(r=>r.shop_id)).size;
 
   $('pname').textContent = LATEST[0] ? (LATEST[0].provider_name) : '';
@@ -194,10 +194,8 @@ function render(){
   $('kShops').textContent = fmt(shops);
   $('kShopsSub').textContent = '当日有交易门店';
   if(prevSum!=null && prevSum>0){
-    const dod = (today-prevSum)/prevSum*100;
-    $('kDod').textContent = (dod>=0?'+':'') + dod.toFixed(1) + '%';
-    $('kTodaySub').innerHTML = '较上一日 <span class="'+(dod>=0?'up':'down')+'">'+(dod>=0?'+':'')+fmt(today-prevSum)+'</span>';
-  } else { $('kDod').textContent='—'; }
+    $('kTodaySub').innerHTML = '较上一日 <span class="'+(today-prevSum>=0?'up':'down')+'">'+(today-prevSum>=0?'+':'')+fmt(today-prevSum)+'</span>';
+  } else { $('kTodaySub').innerHTML = '&nbsp;'; }
 
   $('tblDate').textContent = '（'+latest+'）';
   $('loading').style.display = 'none';
@@ -210,8 +208,8 @@ function drawTable(rows){
   $('empty').style.display='none'; $('tblWrap').style.display='block';
   tb.innerHTML = rows.map(r=>'<tr>'
     + '<td>'+(r.shop_name||'')+'</td>'
-    + '<td>'+(r.partner_id||'')+'</td>'
     + '<td>'+(r.shop_id||'')+'</td>'
+    + '<td>'+(r.partner_id||'')+'</td>'
     + '<td>'+(r.partner_name||'')+'</td>'
     + '<td>'+(r.l2_srvline||'')+'</td>'
     + '<td>'+(r.ops_staff||'')+'</td>'
@@ -221,11 +219,11 @@ function drawTable(rows){
 }
 
 function exportCSV(){
-  const head = ['门店名称','商户ID','门店ID','商户主体','品类','运维二级部门','运维三级部门','运维四级部门','运维小二','支付金额','核销金额','数据日期'];
+  const head = ['门店名称','门店ID','商户ID','商户主体','品类','运维二级部门','运维三级部门','运维四级部门','运维小二','支付金额','核销金额','数据日期'];
   const lines = ['\uFEFF'+head.join(',')];
   LATEST.forEach(r=>{
     const esc = v => { v=(v==null?'':String(v)); return /[",\n]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; };
-    lines.push([r.shop_name,r.partner_id,r.shop_id,r.partner_name,r.l2_srvline,r.ops_dept2,r.ops_dept3,r.ops_dept4,r.ops_staff,r.pay_amt,r.verify_amt,r.stat_date].map(esc).join(','));
+    lines.push([r.shop_name,r.shop_id,r.partner_id,r.partner_name,r.l2_srvline,r.ops_dept2,r.ops_dept3,r.ops_dept4,r.ops_staff,r.pay_amt,r.verify_amt,r.stat_date].map(esc).join(','));
   });
   const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
